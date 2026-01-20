@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import API from "../../utils/api";
-import { auth, formatDate, formatCurrency } from "../../utils/helpers";
+import { auth, formatDate } from "../../utils/helpers";
+import BillReceipt from "../common/BillReceipt";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../styles/MyBookings.css";
 
@@ -8,8 +9,8 @@ function MyBookings() {
   const user = auth.getUser();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptBooking, setReceiptBooking] = useState(null);
 
   useEffect(() => {
     fetchBookings();
@@ -106,13 +107,13 @@ function MyBookings() {
 
                     <div className="d-flex gap-2">
                       <button
-                        className="btn btn-sm btn-outline-primary"
+                        className="btn btn-sm btn-outline-success"
                         onClick={() => {
-                          setSelectedBooking(booking);
-                          setShowModal(true);
+                          setReceiptBooking(booking);
+                          setShowReceipt(true);
                         }}
                       >
-                        <i className="fa fa-info-circle"></i> Details
+                        <i className="fa fa-receipt"></i> Receipt
                       </button>
                       {booking.booking_status === "Pending" && (
                         <button
@@ -135,6 +136,14 @@ function MyBookings() {
           </div>
         )}
       </div>
+
+      {/* Bill Receipt Modal */}
+      {showReceipt && (
+        <BillReceipt
+          booking={receiptBooking}
+          onClose={() => setShowReceipt(false)}
+        />
+      )}
     </div>
   );
 }

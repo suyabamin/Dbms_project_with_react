@@ -1,0 +1,217 @@
+.bill-receipt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+}
+
+.bill-receipt-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.bill-receipt-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 8px 8px 0 0;
+}
+
+.hotel-name {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 5px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.hotel-address {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 0.9rem;
+}
+
+.receipt-number {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 5px 0;
+}
+
+.receipt-date {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.bill-receipt-body {
+  padding: 30px;
+}
+
+.guest-info, .room-info, .billing-details, .payment-info {
+  margin-bottom: 30px;
+}
+
+.guest-info h5, .room-info h5, .billing-details h5, .payment-info h5 {
+  color: #333;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 8px;
+  margin-bottom: 15px;
+}
+
+.billing-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.billing-table th, .billing-table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.billing-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+}
+
+.billing-table .text-center {
+  text-align: center;
+}
+
+.billing-table .text-end {
+  text-align: right;
+}
+
+.tax-row {
+  background-color: #f8f9fa;
+  font-style: italic;
+}
+
+.total-row {
+  background-color: #667eea;
+  color: white;
+  font-weight: bold;
+}
+
+.total-row td {
+  border-color: #667eea;
+}
+
+.terms-conditions {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+  border-left: 4px solid #667eea;
+}
+
+.terms-conditions h6 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.terms-conditions ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.terms-conditions li {
+  margin-bottom: 5px;
+}
+
+.bill-receipt-footer {
+  background-color: #f8f9fa;
+  padding: 20px 30px;
+  border-radius: 0 0 8px 8px;
+  border-top: 1px solid #dee2e6;
+}
+
+.thank-you {
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.contact-info {
+  color: #666;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+@media print {
+  .bill-receipt-overlay {
+    background: white;
+    position: static;
+  }
+
+  .bill-receipt-container {
+    box-shadow: none;
+    max-width: none;
+    width: 100%;
+    max-height: none;
+  }
+
+  .action-buttons {
+    display: none;
+  }
+
+  .bill-receipt-header {
+    background: #333 !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+}
+
+/* PDF-specific styles */
+@media screen and (max-width: 0) {
+  .bill-receipt-container {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+
+  .action-buttons {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .bill-receipt-header {
+    padding: 20px;
+  }
+
+  .bill-receipt-body {
+    padding: 20px;
+  }
+
+  .bill-receipt-footer {
+    padding: 15px 20px;
+  }
+
+  .hotel-name {
+    font-size: 2rem;
+  }
+
+  .billing-table {
+    font-size: 0.9rem;
+  }
+
+  .billing-table th, .billing-table td {
+    padding: 8px;
+  }
+}

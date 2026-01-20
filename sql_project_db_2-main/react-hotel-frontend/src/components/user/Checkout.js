@@ -51,10 +51,12 @@ function Checkout() {
         booking_id: bookingId,
         amount: totalAmount,
         payment_method: paymentData.paymentMethod,
-        payment_status: "Completed",
+        payment_status: paymentData.paymentMethod === "Cash" ? "Pending" : "Completed",
       });
 
-      alert("Booking confirmed! Check your email for confirmation.");
+      alert(paymentData.paymentMethod === "Cash" 
+        ? "Booking confirmed! Please pay cash at reception upon check-in." 
+        : "Booking confirmed! Check your email for confirmation.");
       navigate("/my-bookings");
     } catch (err) {
       setError("Checkout failed. Please try again.");
@@ -171,6 +173,28 @@ function Checkout() {
                 {error && <div className="alert alert-danger">{error}</div>}
 
                 <form onSubmit={handleCheckout}>
+                  <div className="mb-3">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        id="cash"
+                        name="paymentMethod"
+                        value="Cash"
+                        checked={paymentData.paymentMethod === "Cash"}
+                        onChange={(e) =>
+                          setPaymentData({
+                            ...paymentData,
+                            paymentMethod: e.target.value,
+                          })
+                        }
+                      />
+                      <label className="form-check-label" htmlFor="cash">
+                        <i className="fa fa-money-bill-wave"></i> Cash (Pay at Reception)
+                      </label>
+                    </div>
+                  </div>
+
                   <div className="mb-3">
                     <div className="form-check">
                       <input
