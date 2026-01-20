@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
@@ -29,12 +29,32 @@ import AdminReviews from "../components/admin/Reviews";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  const user = auth.getUser();
+  const [user, setUser] = useState(auth.getUser());
+
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setUser(auth.getUser());
+    };
+
+    window.addEventListener("authChange", handleAuthChange);
+    return () => window.removeEventListener("authChange", handleAuthChange);
+  }, []);
+
   return user ? children : <Navigate to="/login" />;
 };
 
 const AdminRoute = ({ children }) => {
-  const user = auth.getUser();
+  const [user, setUser] = useState(auth.getUser());
+
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setUser(auth.getUser());
+    };
+
+    window.addEventListener("authChange", handleAuthChange);
+    return () => window.removeEventListener("authChange", handleAuthChange);
+  }, []);
+
   return user?.role === "admin" ? children : <Navigate to="/" />;
 };
 

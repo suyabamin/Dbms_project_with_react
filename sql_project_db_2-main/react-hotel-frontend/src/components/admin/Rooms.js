@@ -15,6 +15,7 @@ function AdminRooms() {
     price: "",
     status: "Available",
     description: "",
+    imageUrl: "",
   });
   const [editingId, setEditingId] = useState(null);
 
@@ -43,6 +44,7 @@ function AdminRooms() {
         price: parseFloat(formData.price),
         status: formData.status,
         description: formData.description,
+        image_url: formData.imageUrl,
       };
 
       if (editingId) {
@@ -78,6 +80,7 @@ function AdminRooms() {
       price: room.price,
       status: room.status,
       description: room.description,
+      imageUrl: room.image_url || "",
     });
     setEditingId(room.room_id);
     setShowForm(true);
@@ -90,6 +93,7 @@ function AdminRooms() {
       price: "",
       status: "Available",
       description: "",
+      imageUrl: "",
     });
     setEditingId(null);
     setShowForm(false);
@@ -97,8 +101,14 @@ function AdminRooms() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const fieldName =
-      name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, "");
+    let fieldName;
+    
+    if (name === "image_url") {
+      fieldName = "imageUrl";
+    } else {
+      fieldName = name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, "");
+    }
+    
     setFormData((prev) => ({
       ...prev,
       [fieldName]: value,
@@ -199,6 +209,33 @@ function AdminRooms() {
                       ></textarea>
                     </div>
 
+                    <div className="mb-3">
+                      <label className="form-label">Image URL</label>
+                      <input
+                        type="url"
+                        className="form-control"
+                        name="image_url"
+                        placeholder="https://example.com/room-image.jpg"
+                        value={formData.imageUrl}
+                        onChange={handleChange}
+                      />
+                      {formData.imageUrl && (
+                        <div className="mt-2">
+                          <img 
+                            src={formData.imageUrl} 
+                            alt="Room Preview" 
+                            style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'cover' }}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                            }}
+                            onLoad={(e) => {
+                              e.target.style.display = 'block';
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+
                     <button type="submit" className="btn btn-success me-2">
                       {editingId ? "Update" : "Add"} Room
                     </button>
@@ -227,6 +264,7 @@ function AdminRooms() {
                       <th>Type</th>
                       <th>Price</th>
                       <th>Status</th>
+                      <th>Image</th>
                       <th>Description</th>
                       <th>Actions</th>
                     </tr>
@@ -239,6 +277,23 @@ function AdminRooms() {
                         <td>{formatCurrency(room.price)}</td>
                         <td>
                           <span className="badge bg-info">{room.status}</span>
+                        </td>
+                        <td>
+                          {room.image_url ? (
+                            <img 
+                              src={room.image_url} 
+                              alt="Room" 
+                              style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                              }}
+                              onLoad={(e) => {
+                                e.target.style.display = 'block';
+                              }}
+                            />
+                          ) : (
+                            'No Image'
+                          )}
                         </td>
                         <td>{room.description?.substring(0, 30)}...</td>
                         <td>

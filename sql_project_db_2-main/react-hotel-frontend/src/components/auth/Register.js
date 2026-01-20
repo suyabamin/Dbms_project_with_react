@@ -39,8 +39,9 @@ function Register() {
         if (newUser) {
           auth.setUser(newUser);
           auth.setToken(`token_${newUser.user_id}`);
+          // Dispatch auth change event to update Navbar
+          window.dispatchEvent(new Event("authChange"));
           navigate("/");
-          window.location.reload();
         }
       }
     } catch (err) {

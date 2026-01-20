@@ -88,7 +88,19 @@ function RoomDetail() {
           {/* Room Image & Details */}
           <div className="col-md-6 mb-4">
             <div className="room-detail-image">
-              <i className="fa fa-image fa-10x text-secondary"></i>
+              {room.image_url ? (
+                <img 
+                  src={room.image_url} 
+                  alt={`Room ${room.room_number}`} 
+                  style={{ width: '100%', height: '300px', objectFit: 'cover' }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : (
+                <i className="fa fa-image fa-10x text-secondary"></i>
+              )}
             </div>
             <div className="mt-4">
               <h4>Room Information</h4>

@@ -9,10 +9,41 @@ CORS(app)  # Allow React frontend to access backend
 DB_FILE = "hotel_booking.db"
 
 # ---------------- Database Helper ----------------
+def init_database():
+    """Initialize database with proper error handling"""
+    try:
+        # Import and run database creation
+        import create_database
+        print("✅ Database initialized successfully!")
+        return True
+    except Exception as e:
+        print(f"❌ Database initialization failed: {e}")
+        return False
+
 def get_db():
-    conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row
-    return conn
+    """Get database connection with error handling"""
+    try:
+        conn = sqlite3.connect(DB_FILE, timeout=20)
+        conn.row_factory = sqlite3.Row
+        # Test connection
+        conn.execute("SELECT 1")
+        return conn
+    except sqlite3.Error as e:
+        print(f"❌ Database connection error: {e}")
+        # Try to reinitialize database
+        if init_database():
+            try:
+                conn = sqlite3.connect(DB_FILE, timeout=20)
+                conn.row_factory = sqlite3.Row
+                return conn
+            except sqlite3.Error as retry_error:
+                print(f"❌ Retry connection failed: {retry_error}")
+                raise
+        else:
+            raise
+    except Exception as e:
+        print(f"❌ Unexpected database error: {e}")
+        raise
 
 # ---------------- Swagger Setup ----------------
 SWAGGER_URL = "/swagger"
@@ -24,6 +55,18 @@ swaggerui_blueprint = get_swaggerui_blueprint(
     config={"app_name": "Hotel Booking Management System"}
 )
 app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+
+# ---------------- Health Check ----------------
+@app.route("/health")
+def health_check():
+    """Health check endpoint to verify database connectivity"""
+    try:
+        db = get_db()
+        db.execute("SELECT 1")
+        db.close()
+        return jsonify({"status": "healthy", "database": "connected"}), 200
+    except Exception as e:
+        return jsonify({"status": "unhealthy", "error": str(e)}), 500
 
 # ---------------- Root ----------------
 @app.route("/")
@@ -84,10 +127,18 @@ def rooms():
         return jsonify([dict(r) for r in rooms])
 
     data = request.get_json()
-    db.execute(
-        "INSERT INTO rooms (room_number, room_type, price, status, description) VALUES (?, ?, ?, ?, ?)",
-        (data["room_number"], data["room_type"], data["price"], data.get("status", "Available"), data.get("description"))
-    )
+    # Check if image_url exists in the request data
+    image_url = data.get("image_url", None)
+    if image_url:
+        db.execute(
+            "INSERT INTO rooms (room_number, room_type, price, status, description, image_url) VALUES (?, ?, ?, ?, ?, ?)",
+            (data["room_number"], data["room_type"], data["price"], data.get("status", "Available"), data.get("description"), image_url)
+        )
+    else:
+        db.execute(
+            "INSERT INTO rooms (room_number, room_type, price, status, description) VALUES (?, ?, ?, ?, ?)",
+            (data["room_number"], data["room_type"], data["price"], data.get("status", "Available"), data.get("description"))
+        )
     db.commit()
     db.close()
     return jsonify({"message": "Room added"}), 201
@@ -104,9 +155,16 @@ def room_detail(room_id):
 
     elif request.method == "PUT":
         data = request.get_json()
-        db.execute("""
-            UPDATE rooms SET room_number=?, room_type=?, price=?, status=?, description=? WHERE room_id=?
-        """, (data["room_number"], data["room_type"], data["price"], data.get("status"), data.get("description"), room_id))
+        # Check if image_url exists in the request data
+        image_url = data.get("image_url")
+        if image_url is not None:
+            db.execute("""
+                UPDATE rooms SET room_number=?, room_type=?, price=?, status=?, description=?, image_url=? WHERE room_id=?
+            """, (data["room_number"], data["room_type"], data["price"], data.get("status"), data.get("description"), image_url, room_id))
+        else:
+            db.execute("""
+                UPDATE rooms SET room_number=?, room_type=?, price=?, status=?, description=? WHERE room_id=?
+            """, (data["room_number"], data["room_type"], data["price"], data.get("status"), data.get("description"), room_id))
         db.commit()
         db.close()
         return jsonify({"message": "Room updated"})

@@ -17,13 +17,13 @@ VALUES (?, ?, ?)
 
 # ================= USERS =================
 cursor.executemany("""
-INSERT INTO users (name, email, password, phone, status)
-VALUES (?, ?, ?, ?, ?)
+INSERT INTO users (name, email, password, phone, status, role)
+VALUES (?, ?, ?, ?, ?, ?)
 """, [
-    ("Rahim Uddin", "rahim@gmail.com", "pass123", "01711111111", "active"),
-    ("Karim Ahmed", "karim@gmail.com", "pass123", "01822222222", "active"),
-    ("Nusrat Jahan", "nusrat@gmail.com", "pass123", "01933333333", "active"),
-    ("Banned User", "banned@gmail.com", "pass123", "01644444444", "banned")
+    ("Rahim Uddin", "rahim@gmail.com", "pass123", "01711111111", "active", "admin"),
+    ("Karim Ahmed", "karim@gmail.com", "pass123", "01822222222", "active", "user"),
+    ("Nusrat Jahan", "nusrat@gmail.com", "pass123", "01933333333", "active", "user"),
+    ("Banned User", "banned@gmail.com", "pass123", "01644444444", "banned", "user")
 ])
 
 # ================= ROOMS =================

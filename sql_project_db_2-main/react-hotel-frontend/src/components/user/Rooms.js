@@ -139,7 +139,19 @@ function Rooms() {
                   <div key={room.room_id} className="col-md-6 mb-4">
                     <div className="card room-card">
                       <div className="room-image">
-                        <i className="fa fa-image fa-5x text-secondary"></i>
+                        {room.image_url ? (
+                          <img 
+                            src={room.image_url} 
+                            alt={`Room ${room.room_number}`} 
+                            style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : (
+                          <i className="fa fa-image fa-5x text-secondary"></i>
+                        )}
                       </div>
                       <div className="card-body">
                         <h5 className="card-title">

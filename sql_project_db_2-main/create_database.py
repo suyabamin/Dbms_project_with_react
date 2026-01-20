@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
     password TEXT NOT NULL,
     phone TEXT,
     status TEXT DEFAULT 'active',
+    role TEXT DEFAULT 'user',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 )
 """)
@@ -39,7 +40,8 @@ CREATE TABLE IF NOT EXISTS rooms (
     room_type TEXT,
     price REAL NOT NULL,
     status TEXT DEFAULT 'Available',
-    description TEXT
+    description TEXT,
+    image_url TEXT
 )
 """)
 

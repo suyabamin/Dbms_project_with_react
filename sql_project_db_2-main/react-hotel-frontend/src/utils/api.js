@@ -22,6 +22,25 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Response interceptor for error handling
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      alert('Server timeout. Please check if the backend is running.');
+    } else if (error.response?.status === 500) {
+      if (error.response?.data?.error?.includes('database')) {
+        alert('Database connection error. The system will try to reconnect automatically.');
+      } else {
+        alert('Server error occurred. Please try again.');
+      }
+    } else if (!error.response) {
+      alert('Cannot connect to server. Please make sure the backend is running on port 5000.');
+    }
+    return Promise.reject(error);
+  }
+);
+
 // API endpoints
 export const API = {
   // Auth
