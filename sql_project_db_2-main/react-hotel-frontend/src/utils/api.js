@@ -96,7 +96,9 @@ export const API = {
 
   // Features
   getFeatures: () => apiClient.get("/features"),
+  getFeature: (id) => apiClient.get(`/features/${id}`),
   createFeature: (data) => apiClient.post("/features", data),
+  updateFeature: (id, data) => apiClient.put(`/features/${id}`, data),
   deleteFeature: (id) => apiClient.delete(`/features/${id}`),
 
   // Services

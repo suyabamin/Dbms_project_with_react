@@ -49,7 +49,8 @@ CREATE TABLE IF NOT EXISTS rooms (
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS room_features (
     feature_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    feature_name TEXT UNIQUE NOT NULL
+    feature_name TEXT UNIQUE NOT NULL,
+    icon TEXT DEFAULT 'fa-star'
 )
 """)
 
