@@ -172,6 +172,11 @@ function Login() {
               onChange={handleChange}
               required
             />
+            <div className="text-end mt-1">
+              <Link to="/forgot-password" className="text-decoration-none small">
+                Forgot Password?
+              </Link>
+            </div>
           </div>
 
           <button

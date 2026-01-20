@@ -7,6 +7,7 @@ import { auth } from "../utils/helpers";
 // Auth
 import Login from "../components/auth/Login";
 import Register from "../components/auth/Register";
+import ForgotPassword from "../components/auth/ForgotPassword";
 
 // User Pages
 import Home from "../components/user/Home";
@@ -73,6 +74,7 @@ function AppRoutes() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* User Protected Routes */}
           <Route

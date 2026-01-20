@@ -58,6 +58,7 @@ export const API = {
   // Auth
   login: (email, password) => apiClient.post("/login", { email, password }),
   register: (data) => apiClient.post("/users", data),
+  passwordReset: (email) => apiClient.post("/password-reset", { email }),
 
   // Users
   getUsers: () => apiClient.get("/users"),

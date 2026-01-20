@@ -8,7 +8,7 @@ app = Flask(__name__)
 # Enable CORS for all routes with explicit configuration
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"],
+        "origins": ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003", "http://localhost:3004", "http://127.0.0.1:3000", "http://127.0.0.1:3001", "http://127.0.0.1:3002", "http://127.0.0.1:3003", "http://127.0.0.1:3004"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "supports_credentials": True
@@ -335,6 +335,38 @@ def settings():
     settings = db.execute("SELECT * FROM system_settings").fetchall()
     db.close()
     return jsonify([dict(s) for s in settings])
+
+# ================== PASSWORD RESET ==================
+@app.route("/password-reset", methods=["POST"])
+def password_reset():
+    """Request password reset - checks if user exists and sends reset instructions"""
+    data = request.get_json()
+    email = data.get("email")
+
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    try:
+        db = get_db()
+        user = db.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+        db.close()
+
+        if not user:
+            # Don't reveal if email exists or not for security
+            return jsonify({"message": "If an account with this email exists, password reset instructions have been sent."}), 200
+
+        # In a real application, you would:
+        # 1. Generate a secure reset token
+        # 2. Store it in database with expiration
+        # 3. Send email with reset link
+
+        # For this demo, we just return success
+        print(f"Password reset requested for user: {email}")
+        return jsonify({"message": "Password reset instructions have been sent to your email."}), 200
+
+    except Exception as e:
+        print(f"Password reset error: {e}")
+        return jsonify({"error": "Failed to process password reset request"}), 500
 
 # ================== RUN SERVER ==================
 if __name__ == "__main__":

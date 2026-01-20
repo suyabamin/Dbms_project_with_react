@@ -22,7 +22,9 @@ function Rooms() {
     try {
       const response = await API.getRooms();
       setRooms(response.data);
-      setFilteredRooms(response.data);
+      // Filter for available rooms initially
+      const availableRooms = response.data.filter(room => room.status === "Available");
+      setFilteredRooms(availableRooms);
     } catch (err) {
       console.error("Error fetching rooms:", err);
     } finally {
@@ -38,7 +40,7 @@ function Rooms() {
   };
 
   const applyFilters = (filterObj) => {
-    let filtered = rooms;
+    let filtered = rooms.filter(room => room.status === "Available");
 
     if (filterObj.roomType) {
       filtered = filtered.filter(
@@ -50,7 +52,6 @@ function Rooms() {
       filtered = filtered.filter((room) => room.price <= filterObj.maxPrice);
     }
 
-    filtered = filtered.filter((room) => room.status === "Available");
     setFilteredRooms(filtered);
   };
 
@@ -121,8 +122,9 @@ function Rooms() {
                 <button
                   className="btn btn-outline-primary w-100"
                   onClick={() => {
-                    setFilters({ roomType: "", maxPrice: 10000 });
-                    setFilteredRooms(rooms.filter(r => r.status === "Available"));
+                    const defaultFilters = { roomType: "", maxPrice: 10000 };
+                    setFilters(defaultFilters);
+                    applyFilters(defaultFilters);
                   }}
                 >
                   Clear Filters

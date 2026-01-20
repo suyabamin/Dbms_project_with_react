@@ -103,10 +103,15 @@ function AdminRooms() {
     const { name, value } = e.target;
     let fieldName;
     
-    if (name === "image_url") {
+    // Convert snake_case to camelCase
+    if (name === "room_number") {
+      fieldName = "roomNumber";
+    } else if (name === "room_type") {
+      fieldName = "roomType";
+    } else if (name === "image_url") {
       fieldName = "imageUrl";
     } else {
-      fieldName = name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, "");
+      fieldName = name;
     }
     
     setFormData((prev) => ({
