@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import API from "../../utils/api";
 import { auth, formatDate, formatCurrency } from "../../utils/helpers";
+import { generateBookingPDF } from "../../utils/pdfGenerator";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../styles/MyBookings.css";
 
@@ -14,6 +15,32 @@ function MyBookings() {
   useEffect(() => {
     fetchBookings();
   }, []);
+
+  // Function to fetch room details by ID
+  const fetchRoomById = async (roomId) => {
+    try {
+      const response = await API.getRoom(roomId);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching room:', error);
+      return null;
+    }
+  };
+
+  // Function to download booking PDF
+  const downloadBookingPDF = async (booking) => {
+    try {
+      const room = await fetchRoomById(booking.room_id);
+      if (room) {
+        generateBookingPDF(booking, room, user);
+      } else {
+        alert('Could not fetch room details for PDF generation');
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF');
+    }
+  };
 
   const fetchBookings = async () => {
     try {
@@ -113,6 +140,12 @@ function MyBookings() {
                         }}
                       >
                         <i className="fa fa-info-circle"></i> Details
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline-success"
+                        onClick={() => downloadBookingPDF(booking)}
+                      >
+                        <i className="fa fa-download"></i> Download PDF
                       </button>
                       {booking.booking_status === "Pending" && (
                         <button
