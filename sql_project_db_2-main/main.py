@@ -337,10 +337,36 @@ def features():
         return jsonify([dict(f) for f in features])
 
     data = request.get_json()
-    db.execute("INSERT INTO room_features (feature_name) VALUES (?)", (data["name"],))
+    db.execute("INSERT INTO room_features (feature_name, icon) VALUES (?, ?)", 
+               (data["name"], data.get("icon", "fa-star")))
     db.commit()
     db.close()
     return jsonify({"message": "Feature added"}), 201
+
+@app.route("/features/<int:feature_id>", methods=["GET", "PUT", "DELETE"])
+def feature_detail(feature_id):
+    db = get_db()
+    if request.method == "GET":
+        feature = db.execute("SELECT * FROM room_features WHERE feature_id=?", (feature_id,)).fetchone()
+        db.close()
+        if feature:
+            return jsonify(dict(feature))
+        return jsonify({"error": "Feature not found"}), 404
+
+    elif request.method == "PUT":
+        data = request.get_json()
+        db.execute("""
+            UPDATE room_features SET feature_name=?, icon=? WHERE feature_id=?
+        """, (data["name"], data.get("icon", "fa-star"), feature_id))
+        db.commit()
+        db.close()
+        return jsonify({"message": "Feature updated"})
+
+    elif request.method == "DELETE":
+        db.execute("DELETE FROM room_features WHERE feature_id=?", (feature_id,))
+        db.commit()
+        db.close()
+        return jsonify({"message": "Feature deleted"})
 
 # ================== SERVICES ==================
 @app.route("/services", methods=["GET", "POST"])

@@ -27,6 +27,7 @@ import AdminRooms from "../components/admin/Rooms";
 import AdminUsers from "../components/admin/Users";
 import AdminBookings from "../components/admin/Bookings";
 import AdminReviews from "../components/admin/Reviews";
+import AdminFeatures from "../components/admin/Features";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -148,6 +149,14 @@ function AppRoutes() {
             element={
               <AdminRoute>
                 <AdminReviews />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/features"
+            element={
+              <AdminRoute>
+                <AdminFeatures />
               </AdminRoute>
             }
           />
