@@ -1,0 +1,33 @@
+.rating button {
+  background: none;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.rating button:hover {
+  transform: scale(1.2);
+}
+
+.card {
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+textarea {
+  resize: none;
+  border-radius: 8px;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+.text-muted {
+  color: #999 !important;
+}

@@ -1,0 +1,25 @@
+.sidebar {
+  min-height: calc(100vh - 100px);
+  border-right: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+}
+
+.sidebar .nav-link {
+  color: #333 !important;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 5px;
+  transition: all 0.3s ease;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+  background: #f0f0f0;
+  color: #667eea !important;
+}
+
+.sidebar .nav-link i {
+  margin-right: 10px;
+  width: 20px;
+}

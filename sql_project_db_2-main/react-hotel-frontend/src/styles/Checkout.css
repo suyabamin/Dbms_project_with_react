@@ -1,0 +1,26 @@
+.checkout-card {
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+}
+
+.form-select,
+.form-control {
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.form-select:focus,
+.form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.alert {
+  border-radius: 8px;
+}
+
+.alert-info {
+  background: #e7f3ff;
+  border: 1px solid #b3d9ff;
+  color: #004085;
+}

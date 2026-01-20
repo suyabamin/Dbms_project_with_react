@@ -1,0 +1,24 @@
+.facility-card {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.facility-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.facility-card i {
+  transition: all 0.3s ease;
+}
+
+.facility-card:hover i {
+  color: #764ba2 !important;
+}
+
+.facility-card h5 {
+  font-weight: 600;
+  margin-top: 15px;
+}

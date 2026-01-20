@@ -1,0 +1,38 @@
+footer {
+  margin-top: 60px;
+  background: #222;
+}
+
+footer a {
+  color: #999;
+}
+
+footer a:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+footer h5 {
+  color: white;
+  font-weight: 600;
+}
+
+footer h6 {
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+footer .text-white-50 {
+  color: #999 !important;
+  font-size: 14px;
+  transition: color 0.3s ease;
+}
+
+footer .text-white-50:hover {
+  color: white !important;
+}
+
+.list-unstyled li {
+  margin-bottom: 10px;
+}

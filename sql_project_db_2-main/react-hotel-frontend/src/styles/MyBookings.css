@@ -1,0 +1,26 @@
+.booking-card {
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.booking-card:hover {
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.booking-details {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 15px 0;
+}
+
+.booking-details p {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.badge {
+  font-size: 12px;
+  padding: 6px 12px;
+}

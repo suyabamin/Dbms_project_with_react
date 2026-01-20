@@ -1,0 +1,44 @@
+.page-header {
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 30px;
+}
+
+.page-header h1 {
+  font-weight: 700;
+  color: #333;
+}
+
+.room-card {
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.room-card:hover {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transform: translateY(-5px);
+}
+
+.room-image {
+  background: #f0f0f0;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.room-card .card-body {
+  padding: 20px;
+}
+
+.room-card .badge {
+  font-size: 12px;
+  padding: 5px 10px;
+}
+
+@media (max-width: 768px) {
+  .room-card {
+    margin-bottom: 20px;
+  }
+}
