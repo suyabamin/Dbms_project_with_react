@@ -8,6 +8,7 @@ const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  timeout: 10000, // 10 second timeout
 });
 
 // Add token to requests if available
@@ -17,25 +18,36 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log(`API Request: ${config.method.toUpperCase()} ${config.url}`);
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error("Request interceptor error:", error);
+    return Promise.reject(error);
+  }
 );
 
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`API Response: ${response.status} ${response.config.url}`);
+    return response;
+  },
   (error) => {
-    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-      alert('Server timeout. Please check if the backend is running.');
+    console.error("API Error:", error.message, error.code);
+    
+    if (error.code === 'ECONNABORTED') {
+      console.error('Server timeout');
+      return Promise.reject(error);
+    } else if (error.message === 'Network Error') {
+      console.error('Network error - backend may not be running');
+      return Promise.reject(error);
     } else if (error.response?.status === 500) {
-      if (error.response?.data?.error?.includes('database')) {
-        alert('Database connection error. The system will try to reconnect automatically.');
-      } else {
-        alert('Server error occurred. Please try again.');
-      }
-    } else if (!error.response) {
-      alert('Cannot connect to server. Please make sure the backend is running on port 5000.');
+      console.error('Server error:', error.response.data);
+      return Promise.reject(error);
+    } else if (!error.response && error.code !== 'ECONNABORTED') {
+      console.error('Connection failed - check if backend is running');
+      return Promise.reject(error);
     }
     return Promise.reject(error);
   }

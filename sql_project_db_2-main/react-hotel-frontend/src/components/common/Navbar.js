@@ -8,6 +8,7 @@ function Navbar() {
   const navigate = useNavigate();
   const [user, setUser] = useState(auth.getUser());
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Listen for storage changes (login/logout from other tabs or this tab)
   useEffect(() => {
@@ -22,15 +23,25 @@ function Navbar() {
     // Also listen for custom auth change event
     window.addEventListener("authChange", handleStorageChange);
 
+    // Close dropdown when clicking outside
+    const handleClickOutside = (e) => {
+      if (dropdownOpen && !e.target.closest('.dropdown')) {
+        setDropdownOpen(false);
+      }
+    };
+    
+    document.addEventListener("click", handleClickOutside);
+
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("authChange", handleStorageChange);
+      document.removeEventListener("click", handleClickOutside);
     };
-  }, []);
+  }, [dropdownOpen]);
 
   const handleLogout = () => {
     try {
-      console.log("Starting logout...");
+      console.log("🚪 Logout started...");
       
       // Close the dropdown
       setIsOpen(false);
@@ -40,7 +51,7 @@ function Navbar() {
       sessionStorage.clear();
       localStorage.clear();
       
-      console.log("Auth cleared, user data:", auth.getUser());
+      console.log("✅ Auth cleared, user data:", auth.getUser());
       
       // Dispatch custom event to notify other components
       window.dispatchEvent(new Event("authChange"));
@@ -48,14 +59,14 @@ function Navbar() {
       // Update state immediately
       setUser(null);
       
-      console.log("Navigating to login...");
+      console.log("🚪 Navigating to login...");
       
       // Navigate to login page
       setTimeout(() => {
         navigate("/login");
       }, 100);
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("❌ Logout error:", error);
       localStorage.clear();
       sessionStorage.clear();
       window.location.href = "/login";
@@ -104,28 +115,41 @@ function Navbar() {
             {user ? (
               <>
                 <li className="nav-item dropdown">
-                  <a
-                    className="nav-link dropdown-toggle"
-                    href="/"
-                    role="button"
-                    data-bs-toggle="dropdown"
-                    onClick={(e) => e.preventDefault()}
+                  <button
+                    className="nav-link dropdown-toggle btn btn-link"
+                    onClick={() => {
+                      console.log("🔽 Dropdown clicked, opening:", !dropdownOpen);
+                      setDropdownOpen(!dropdownOpen);
+                    }}
+                    style={{ border: 'none', background: 'none', cursor: 'pointer', textDecoration: 'none' }}
                   >
                     <i className="fa fa-user"></i> {user.name}
-                  </a>
-                  <ul className="dropdown-menu dropdown-menu-end">
+                  </button>
+                  <ul className={`dropdown-menu dropdown-menu-end ${dropdownOpen ? "show" : ""}`} style={{ display: dropdownOpen ? "block" : "none" }}>
                     <li>
-                      <Link to="/profile" className="dropdown-item">
+                      <Link 
+                        to="/profile" 
+                        className="dropdown-item"
+                        onClick={() => setDropdownOpen(false)}
+                      >
                         <i className="fa fa-user-circle me-2"></i>Profile
                       </Link>
                     </li>
                     <li>
-                      <Link to="/my-bookings" className="dropdown-item">
+                      <Link 
+                        to="/my-bookings" 
+                        className="dropdown-item"
+                        onClick={() => setDropdownOpen(false)}
+                      >
                         <i className="fa fa-calendar me-2"></i>My Bookings
                       </Link>
                     </li>
                     <li>
-                      <Link to="/my-reviews" className="dropdown-item">
+                      <Link 
+                        to="/my-reviews" 
+                        className="dropdown-item"
+                        onClick={() => setDropdownOpen(false)}
+                      >
                         <i className="fa fa-star me-2"></i>My Reviews
                       </Link>
                     </li>
@@ -135,7 +159,11 @@ function Navbar() {
                           <hr className="dropdown-divider" />
                         </li>
                         <li>
-                          <Link to="/admin/dashboard" className="dropdown-item">
+                          <Link 
+                            to="/admin/dashboard" 
+                            className="dropdown-item"
+                            onClick={() => setDropdownOpen(false)}
+                          >
                             <i className="fa fa-tachometer me-2"></i>Admin Panel
                           </Link>
                         </li>
@@ -147,8 +175,12 @@ function Navbar() {
                     <li>
                       <button
                         className="dropdown-item text-danger fw-bold"
-                        onClick={handleLogout}
-                        style={{ cursor: 'pointer' }}
+                        onClick={() => {
+                          console.log("🔴 Logout button clicked");
+                          setDropdownOpen(false);
+                          handleLogout();
+                        }}
+                        style={{ cursor: 'pointer', border: 'none', background: 'none', width: '100%', textAlign: 'left' }}
                       >
                         <i className="fa fa-sign-out me-2"></i>Logout
                       </button>

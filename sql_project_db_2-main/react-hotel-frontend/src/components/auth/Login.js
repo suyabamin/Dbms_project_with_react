@@ -22,58 +22,86 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("🔐 Login attempt started...");
     setError("");
     setLoading(true);
 
     try {
+      console.log("📡 Checking backend connection...");
+      // Check if backend is reachable
+      try {
+        const healthCheck = await fetch("http://127.0.0.1:5000/health", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          mode: "cors",
+        });
+        
+        console.log("Health check response:", healthCheck.status);
+        if (!healthCheck.ok) {
+          throw new Error("Backend not responding");
+        }
+        console.log("✅ Backend health check passed");
+      } catch (healthErr) {
+        console.error("❌ Backend health check failed:", healthErr);
+        setError("Cannot connect to server. Backend is not running on port 5000.");
+        setLoading(false);
+        return;
+      }
+
       if (loginType === "admin") {
+        console.log("👨‍💼 Attempting admin login...");
         // For admin login, we need to check admin credentials
-        // Since the backend doesn't have an explicit admin login endpoint,
-        // we'll use the existing API to check if the user exists and has admin role
         const response = await API.getUsers();
+        console.log("👥 Users fetched:", response.data.length);
         const users = response.data;
         const user = users.find(
           (u) => u.email === formData.email && u.password === formData.password && u.role === "admin"
         );
 
         if (user) {
+          console.log("✅ Admin found:", user.name);
           auth.setUser(user);
           auth.setToken(`token_${user.user_id}`);
-          // Dispatch auth change event to update Navbar
           window.dispatchEvent(new Event("authChange"));
           navigate("/admin/dashboard");
         } else {
+          console.log("❌ Invalid admin credentials");
           setError("Invalid admin credentials");
         }
       } else {
-        // For user login, check regular users
+        console.log("👤 Attempting user login...");
         const response = await API.getUsers();
+        console.log("👥 Users fetched:", response.data.length);
         const users = response.data;
         const user = users.find(
           (u) => u.email === formData.email && u.password === formData.password
         );
 
         if (user) {
+          console.log("✅ User found:", user.name);
           auth.setUser(user);
           auth.setToken(`token_${user.user_id}`);
-          // Dispatch auth change event to update Navbar
           window.dispatchEvent(new Event("authChange"));
           navigate("/");
         } else {
+          console.log("❌ Invalid email or password");
           setError("Invalid email or password");
         }
       }
     } catch (err) {
-      if (err.message.includes('Network Error') || err.code === 'ECONNABORTED') {
-        setError("Cannot connect to server. Please make sure the backend is running.");
+      console.error("❌ Login error:", err);
+      if (err.message.includes('Network Error') || err.code === 'ECONNABORTED' || err.message === 'Failed to fetch') {
+        setError("Cannot connect to server. Backend might be down. Check console for details.");
       } else if (err.response?.status === 500) {
-        setError("Server error. Please try again or contact administrator.");
+        setError("Server error. Please try again.");
+      } else if (err.message === 'Backend not responding') {
+        setError("Backend server is not responding.");
       } else {
-        setError("Login failed. Please try again.");
+        setError("Login failed. Please check console for details.");
       }
-      console.error("Login error:", err);
     } finally {
       setLoading(false);
+      console.log("🔐 Login attempt finished");
     }
   };
 
