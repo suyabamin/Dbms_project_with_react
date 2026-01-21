@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../styles/Contact.css";
 
@@ -10,28 +10,79 @@ function Contact() {
     subject: "",
     message: "",
   });
+  const [contactInfo, setContactInfo] = useState({
+    address_line1: "Sayed Nagar B-Block Society",
+    address_line2: "Panir Pump Road",
+    phone: "01302616903",
+    email: "khorsedalam0472@gmail.com"
+  });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const fetchContactInfo = useCallback(async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:5000/settings");
+      const settings = await response.json();
+
+      // Convert settings array to object
+      const settingsObj = {};
+      settings.forEach(setting => {
+        settingsObj[setting.setting_key] = setting.setting_value;
+      });
+
+      setContactInfo({
+        address_line1: settingsObj.contact_address_line1 || contactInfo.address_line1,
+        address_line2: settingsObj.contact_address_line2 || contactInfo.address_line2,
+        phone: settingsObj.contact_phone || contactInfo.phone,
+        email: settingsObj.contact_email || contactInfo.email
+      });
+    } catch (err) {
+      console.error("Error fetching contact info:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [contactInfo]);
+
+  useEffect(() => {
+    fetchContactInfo();
+  }, [fetchContactInfo]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // In a real app, this would send the message to a backend
-    console.log("Contact form submitted:", formData);
-    setSubmitted(true);
-    setTimeout(() => {
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        subject: "",
-        message: "",
+
+    try {
+      const response = await fetch("http://127.0.0.1:5000/contact-messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
       });
-      setSubmitted(false);
-    }, 3000);
+
+      if (response.ok) {
+        setSubmitted(true);
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          subject: "",
+          message: "",
+        });
+        setTimeout(() => {
+          setSubmitted(false);
+        }, 3000);
+      } else {
+        alert("Failed to send message. Please try again.");
+      }
+    } catch (err) {
+      console.error("Error sending message:", err);
+      alert("Failed to send message. Please try again.");
+    }
   };
 
   return (
@@ -51,15 +102,15 @@ function Contact() {
             <div className="contact-card text-center p-4">
               <i className="fa fa-map-marker fa-3x text-primary mb-3"></i>
               <h5>Address</h5>
-              <p>123 Hotel Street, City Center</p>
-              <p>Country, PIN - 000000</p>
+              <p>{contactInfo.address_line1}</p>
+              <p>{contactInfo.address_line2}</p>
             </div>
           </div>
           <div className="col-md-4 mb-4">
             <div className="contact-card text-center p-4">
               <i className="fa fa-phone fa-3x text-primary mb-3"></i>
               <h5>Phone</h5>
-              <p>+1 (800) 123-4567</p>
+              <p>{contactInfo.phone}</p>
               <p>Available 24/7</p>
             </div>
           </div>
@@ -67,7 +118,7 @@ function Contact() {
             <div className="contact-card text-center p-4">
               <i className="fa fa-envelope fa-3x text-primary mb-3"></i>
               <h5>Email</h5>
-              <p>support@hotelbook.com</p>
+              <p>{contactInfo.email}</p>
               <p>Response within 24 hours</p>
             </div>
           </div>

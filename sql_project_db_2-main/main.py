@@ -440,6 +440,68 @@ def password_reset():
         print(f"Password reset error: {e}")
         return jsonify({"error": "Failed to process password reset request"}), 500
 
+# ================== SYSTEM SETTINGS ==================
+@app.route("/settings", methods=["GET", "POST"])
+def system_settings():
+    db = get_db()
+    if request.method == "GET":
+        settings = db.execute("SELECT * FROM system_settings").fetchall()
+        db.close()
+        return jsonify([dict(s) for s in settings])
+
+    # POST - update settings
+    data = request.get_json()
+    for key, value in data.items():
+        db.execute(
+            "INSERT OR REPLACE INTO system_settings (setting_key, setting_value) VALUES (?, ?)",
+            (key, value)
+        )
+    db.commit()
+    db.close()
+    return jsonify({"message": "Settings updated"}), 200
+
+# ================== CONTACT MESSAGES ==================
+@app.route("/contact-messages", methods=["GET", "POST"])
+def contact_messages():
+    db = get_db()
+    if request.method == "GET":
+        messages = db.execute("""
+            SELECT * FROM contact_messages 
+            ORDER BY created_at DESC
+        """).fetchall()
+        db.close()
+        return jsonify([dict(m) for m in messages])
+
+    # POST - create message
+    data = request.get_json()
+    db.execute(
+        "INSERT INTO contact_messages (name, email, phone, subject, message) VALUES (?, ?, ?, ?, ?)",
+        (data["name"], data["email"], data.get("phone"), data.get("subject"), data["message"])
+    )
+    db.commit()
+    db.close()
+    return jsonify({"message": "Message sent successfully"}), 201
+
+@app.route("/contact-messages/<int:message_id>", methods=["PUT", "DELETE"])
+def contact_message_detail(message_id):
+    db = get_db()
+    
+    if request.method == "PUT":
+        data = request.get_json()
+        db.execute(
+            "UPDATE contact_messages SET status=? WHERE message_id=?",
+            (data.get("status", "read"), message_id)
+        )
+        db.commit()
+        db.close()
+        return jsonify({"message": "Message updated"}), 200
+    
+    elif request.method == "DELETE":
+        db.execute("DELETE FROM contact_messages WHERE message_id=?", (message_id,))
+        db.commit()
+        db.close()
+        return jsonify({"message": "Message deleted"}), 200
+
 # ================== RUN SERVER ==================
 if __name__ == "__main__":
     app.run(debug=True)

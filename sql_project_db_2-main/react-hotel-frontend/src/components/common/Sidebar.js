@@ -38,6 +38,11 @@ function Sidebar() {
           </Link>
         </li>
         <li className="nav-item">
+          <Link to="/admin/contact" className="nav-link">
+            <i className="fa fa-envelope"></i> Contact
+          </Link>
+        </li>
+        <li className="nav-item">
           <Link to="/admin/services" className="nav-link">
             <i className="fa fa-concierge-bell"></i> Services
           </Link>

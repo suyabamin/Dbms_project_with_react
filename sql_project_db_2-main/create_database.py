@@ -158,6 +158,20 @@ CREATE TABLE IF NOT EXISTS system_settings (
 )
 """)
 
+# ================= CONTACT MESSAGES TABLE =================
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS contact_messages (
+    message_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT,
+    subject TEXT,
+    message TEXT NOT NULL,
+    status TEXT DEFAULT 'unread',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
 # Commit changes and close connection
 conn.commit()
 conn.close()

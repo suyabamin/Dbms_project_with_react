@@ -20,7 +20,7 @@ cursor.executemany("""
 INSERT INTO users (name, email, password, phone, status, role)
 VALUES (?, ?, ?, ?, ?, ?)
 """, [
-    ("Rahim Uddin", "rahim@gmail.com", "pass123", "01711111111", "active", "admin"),
+    ("Rahim Uddin", "khorsedalam0472@gmail.com", "pass123", "01711111111", "active", "admin"),
     ("Karim Ahmed", "karim@gmail.com", "pass123", "01822222222", "active", "user"),
     ("Nusrat Jahan", "nusrat@gmail.com", "pass123", "01933333333", "active", "user"),
     ("Banned User", "banned@gmail.com", "pass123", "01644444444", "banned", "user")
@@ -137,7 +137,11 @@ VALUES (?, ?)
 """, [
     ("site_status", "online"),
     ("booking_enabled", "true"),
-    ("maintenance_mode", "false")
+    ("maintenance_mode", "false"),
+    ("contact_address_line1", "Sayed Nagar B-Block Society"),
+    ("contact_address_line2", "Panir Pump Road"),
+    ("contact_phone", "01302616903"),
+    ("contact_email", "khorsedalam0472@gmail.com")
 ])
 
 conn.commit()

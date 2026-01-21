@@ -101,10 +101,15 @@ export const API = {
   updateFeature: (id, data) => apiClient.put(`/features/${id}`, data),
   deleteFeature: (id) => apiClient.delete(`/features/${id}`),
 
-  // Services
-  getServices: () => apiClient.get("/services"),
-  createService: (data) => apiClient.post("/services", data),
-  deleteService: (id) => apiClient.delete(`/services/${id}`),
+  // Settings
+  getSettings: () => apiClient.get("/settings"),
+  updateSettings: (data) => apiClient.post("/settings", data),
+
+  // Contact Messages
+  getContactMessages: () => apiClient.get("/contact-messages"),
+  sendContactMessage: (data) => apiClient.post("/contact-messages", data),
+  updateContactMessage: (id, data) => apiClient.put(`/contact-messages/${id}`, data),
+  deleteContactMessage: (id) => apiClient.delete(`/contact-messages/${id}`),
 };
 
 export default API;
