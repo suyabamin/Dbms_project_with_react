@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import API from "../../utils/api";
-import { auth, formatDate, formatCurrency } from "../../utils/helpers";
+import { auth, formatDate } from "../../utils/helpers";
 import { generateBookingPDF } from "../../utils/pdfGenerator";
 import BillReceipt from "../common/BillReceipt";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -13,9 +13,23 @@ function MyBookings() {
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptBooking, setReceiptBooking] = useState(null);
 
+  const fetchBookings = useCallback(async () => {
+    try {
+      const response = await API.getBookings();
+      const userBookings = response.data.filter(
+        (b) => b.user_id === user.user_id
+      );
+      setBookings(userBookings);
+    } catch (err) {
+      console.error("Error fetching bookings:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user.user_id]);
+
   useEffect(() => {
     fetchBookings();
-  }, []);
+  }, [fetchBookings]);
 
   // Function to fetch room details by ID
   const fetchRoomById = async (roomId) => {
@@ -40,20 +54,6 @@ function MyBookings() {
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error generating PDF');
-    }
-  };
-
-  const fetchBookings = async () => {
-    try {
-      const response = await API.getBookings();
-      const userBookings = response.data.filter(
-        (b) => b.user_id === user.user_id
-      );
-      setBookings(userBookings);
-    } catch (err) {
-      console.error("Error fetching bookings:", err);
-    } finally {
-      setLoading(false);
     }
   };
 
