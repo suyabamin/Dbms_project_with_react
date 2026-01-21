@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import API from "../../utils/api";
 import { auth, formatDate } from "../../utils/helpers";
+import { generateBookingPDF } from "../../utils/pdfGenerator";
 import BillReceipt from "../common/BillReceipt";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../styles/MyBookings.css";
@@ -12,11 +13,7 @@ function MyBookings() {
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptBooking, setReceiptBooking] = useState(null);
 
-  useEffect(() => {
-    fetchBookings();
-  }, []);
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
       const response = await API.getBookings();
       const userBookings = response.data.filter(
@@ -27,6 +24,36 @@ function MyBookings() {
       console.error("Error fetching bookings:", err);
     } finally {
       setLoading(false);
+    }
+  }, [user.user_id]);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
+
+  // Function to fetch room details by ID
+  const fetchRoomById = async (roomId) => {
+    try {
+      const response = await API.getRoom(roomId);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching room:', error);
+      return null;
+    }
+  };
+
+  // Function to download booking PDF
+  const downloadBookingPDF = async (booking) => {
+    try {
+      const room = await fetchRoomById(booking.room_id);
+      if (room) {
+        generateBookingPDF(booking, room, user);
+      } else {
+        alert('Could not fetch room details for PDF generation');
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF');
     }
   };
 
@@ -114,6 +141,12 @@ function MyBookings() {
                         }}
                       >
                         <i className="fa fa-receipt"></i> Receipt
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline-success"
+                        onClick={() => downloadBookingPDF(booking)}
+                      >
+                        <i className="fa fa-download"></i> Download PDF
                       </button>
                       {booking.booking_status === "Pending" && (
                         <button

@@ -174,7 +174,7 @@
   .bill-receipt-header {
     background: #333 !important;
     -webkit-print-color-adjust: exact;
-    color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
 

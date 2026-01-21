@@ -26,19 +26,16 @@ function AdminBookings() {
 
   const handleStatusChange = async (bookingId, field, value) => {
     try {
-      const booking = bookings.find((b) => b.booking_id === bookingId);
       const updateData = {
-        ...booking,
         [field === "booking" ? "booking_status" : "arrival_status"]: value,
       };
-      delete updateData.user_id;
-      delete updateData.room_id;
 
       await API.updateBooking(bookingId, updateData);
       fetchBookings();
       alert("Booking updated");
     } catch (err) {
-      alert("Error updating booking");
+      console.error("Error updating booking:", err);
+      alert("Error updating booking: " + (err.response?.data?.message || err.message || "Unknown error"));
     }
   };
 

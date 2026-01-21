@@ -113,9 +113,23 @@ def user_detail(user_id):
 
     elif request.method == "PUT":
         data = request.get_json()
+        
+        # Get current user to preserve existing values
+        current_user = db.execute("SELECT * FROM users WHERE user_id=?", (user_id,)).fetchone()
+        if not current_user:
+            db.close()
+            return jsonify({"error": "User not found"}), 404
+        
+        # Prepare update values, keeping existing values if not provided
+        name = data.get("name", current_user["name"])
+        email = data.get("email", current_user["email"])
+        password = data.get("password", current_user["password"])
+        phone = data.get("phone", current_user["phone"])
+        status = data.get("status", current_user["status"])
+        
         db.execute("""
             UPDATE users SET name=?, email=?, password=?, phone=?, status=? WHERE user_id=?
-        """, (data["name"], data["email"], data["password"], data.get("phone"), data.get("status"), user_id))
+        """, (name, email, password, phone, status, user_id))
         db.commit()
         db.close()
         return jsonify({"message": "User updated"})
@@ -219,9 +233,24 @@ def booking_detail(booking_id):
 
     elif request.method == "PUT":
         data = request.get_json()
+        
+        # Get current booking to preserve existing values
+        current_booking = db.execute("SELECT * FROM bookings WHERE booking_id=?", (booking_id,)).fetchone()
+        if not current_booking:
+            db.close()
+            return jsonify({"error": "Booking not found"}), 404
+        
+        # Prepare update values, keeping existing values if not provided
+        user_id = data.get("user_id", current_booking["user_id"])
+        room_id = data.get("room_id", current_booking["room_id"])
+        check_in = data.get("check_in", current_booking["check_in"])
+        check_out = data.get("check_out", current_booking["check_out"])
+        booking_status = data.get("booking_status", current_booking["booking_status"])
+        arrival_status = data.get("arrival_status", current_booking["arrival_status"])
+        
         db.execute("""
             UPDATE bookings SET user_id=?, room_id=?, check_in=?, check_out=?, booking_status=?, arrival_status=? WHERE booking_id=?
-        """, (data["user_id"], data["room_id"], data["check_in"], data["check_out"], data.get("booking_status"), data.get("arrival_status"), booking_id))
+        """, (user_id, room_id, check_in, check_out, booking_status, arrival_status, booking_id))
         db.commit()
         db.close()
         return jsonify({"message": "Booking updated"})

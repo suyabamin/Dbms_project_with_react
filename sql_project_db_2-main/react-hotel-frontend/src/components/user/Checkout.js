@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import API from "../../utils/api";
 import { formatCurrency, calculateNights, auth } from "../../utils/helpers";
+import { generateBookingPDF } from "../../utils/pdfGenerator";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../styles/Checkout.css";
 
@@ -54,9 +55,16 @@ function Checkout() {
         payment_status: paymentData.paymentMethod === "Cash" ? "Pending" : "Completed",
       });
 
+      // Fetch the complete booking data to generate PDF
+      const completeBooking = await API.getBooking(bookingId);
+      
+      // Generate booking PDF
+      generateBookingPDF(completeBooking.data, room, user);
+      
       alert(paymentData.paymentMethod === "Cash" 
-        ? "Booking confirmed! Please pay cash at reception upon check-in." 
-        : "Booking confirmed! Check your email for confirmation.");
+        ? "Booking confirmed! Please pay cash at reception upon check-in and download the receipt." 
+        : "Booking confirmed! Check your email for confirmation and download the receipt.");
+      
       navigate("/my-bookings");
     } catch (err) {
       setError("Checkout failed. Please try again.");

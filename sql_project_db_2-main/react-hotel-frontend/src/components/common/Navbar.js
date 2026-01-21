@@ -76,8 +76,16 @@ function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
       <div className="container">
-        <Link to="/" className="navbar-brand">
-          <i className="fa fa-hotel"></i> HotelBook
+        <Link to="/" className="navbar-brand d-flex align-items-center">
+          <img 
+            src="https://selective-gray-xhab2ktkpn.edgeone.app/6-01-removebg-preview.png" 
+            alt="Hotel Logo" 
+            style={{ width: '40px', height: '40px', marginRight: '10px' }}
+            onError={(e) => {
+              e.target.style.display = 'none';
+            }}
+          />
+          <span>HotelBook</span>
         </Link>
         <button
           className="navbar-toggler"
