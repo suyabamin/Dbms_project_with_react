@@ -8,6 +8,7 @@ import "../../styles/Rooms.css";
 function Rooms() {
   const [rooms, setRooms] = useState([]);
   const [filteredRooms, setFilteredRooms] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     roomType: "",
@@ -15,21 +16,44 @@ function Rooms() {
   });
 
   useEffect(() => {
-    fetchRooms();
+    fetchRoomsAndBookings();
   }, []);
 
-  const fetchRooms = async () => {
+  const fetchRoomsAndBookings = async () => {
     try {
-      const response = await API.getRooms();
-      setRooms(response.data);
+      const [roomsResponse, bookingsResponse] = await Promise.all([
+        API.getRooms(),
+        API.getBookings()
+      ]);
+      
+      setRooms(roomsResponse.data);
+      setBookings(bookingsResponse.data);
+      
       // Filter for available rooms initially
-      const availableRooms = response.data.filter(room => room.status === "Available");
+      const availableRooms = roomsResponse.data.filter(room => room.status === "Available");
       setFilteredRooms(availableRooms);
     } catch (err) {
-      console.error("Error fetching rooms:", err);
+      console.error("Error fetching data:", err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const getUpcomingBookings = (roomId) => {
+    const today = new Date().toISOString().split('T')[0];
+    return bookings.filter(booking => 
+      booking.room_id === roomId && 
+      booking.booking_status !== 'Cancelled' &&
+      booking.check_out >= today
+    ).sort((a, b) => new Date(a.check_in) - new Date(b.check_in));
+  };
+
+  const formatBookingDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric' 
+    });
   };
 
   const handleFilterChange = (e) => {
@@ -137,52 +161,67 @@ function Rooms() {
           <div className="col-md-9">
             {filteredRooms.length > 0 ? (
               <div className="row">
-                {filteredRooms.map((room) => (
-                  <div key={room.room_id} className="col-md-6 mb-4">
-                    <div className="card room-card">
-                      <div className="room-image">
-                        {room.image_url ? (
-                          <img 
-                            src={room.image_url} 
-                            alt={`Room ${room.room_number}`} 
-                            style={{ width: '100%', height: '200px', objectFit: 'cover' }}
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'flex';
-                            }}
-                          />
-                        ) : (
-                          <i className="fa fa-image fa-5x text-secondary"></i>
-                        )}
-                      </div>
-                      <div className="card-body">
-                        <h5 className="card-title">
-                          Room {room.room_number}
-                        </h5>
-                        <p className="text-muted">
-                          <span className="badge bg-info">
-                            {room.room_type}
-                          </span>
-                        </p>
-                        <p className="card-text text-truncate">
-                          {room.description}
-                        </p>
-                        <div className="d-flex justify-content-between align-items-center">
-                          <h4 className="text-primary mb-0">
-                            {formatCurrency(room.price)}
-                            <small className="text-muted fs-6">/night</small>
-                          </h4>
-                          <Link
-                            to={`/room/${room.room_id}`}
-                            className="btn btn-primary btn-sm"
-                          >
-                            View Details
-                          </Link>
+                {filteredRooms.map((room) => {
+                  const upcomingBookings = getUpcomingBookings(room.room_id);
+                  const nextBooking = upcomingBookings[0];
+                  
+                  return (
+                    <div key={room.room_id} className="col-md-6 mb-4">
+                      <div className="card room-card">
+                        <div className="room-image">
+                          {room.image_url ? (
+                            <img 
+                              src={room.image_url} 
+                              alt={`Room ${room.room_number}`} 
+                              style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : (
+                            <i className="fa fa-image fa-5x text-secondary"></i>
+                          )}
+                        </div>
+                        <div className="card-body">
+                          <h5 className="card-title">
+                            Room {room.room_number}
+                          </h5>
+                          <p className="text-muted">
+                            <span className="badge bg-info">
+                              {room.room_type}
+                            </span>
+                          </p>
+                          
+                          {/* Booking Status */}
+                          {nextBooking && (
+                            <div className="mb-2">
+                              <span className="badge bg-warning text-dark">
+                                <i className="fa fa-calendar"></i> Booked {formatBookingDate(nextBooking.check_in)} - {formatBookingDate(nextBooking.check_out)}
+                              </span>
+                            </div>
+                          )}
+                          
+                          <p className="card-text text-truncate">
+                            {room.description}
+                          </p>
+                          <div className="d-flex justify-content-between align-items-center">
+                            <h4 className="text-primary mb-0">
+                              {formatCurrency(room.price)}
+                              <small className="text-muted fs-6">/night</small>
+                            </h4>
+                            <Link
+                              to={`/room/${room.room_id}`}
+                              className="btn btn-primary btn-sm"
+                            >
+                              View Details
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="alert alert-info">

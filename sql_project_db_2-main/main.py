@@ -213,6 +213,23 @@ def bookings():
         return jsonify([dict(b) for b in bookings])
 
     data = request.get_json()
+    
+    # Check for overlapping bookings
+    room_id = data["room_id"]
+    check_in = data["check_in"]
+    check_out = data["check_out"]
+    
+    overlapping_bookings = db.execute("""
+        SELECT * FROM bookings 
+        WHERE room_id = ? 
+        AND booking_status != 'Cancelled'
+        AND check_in < ? AND check_out > ?
+    """, (room_id, check_out, check_in)).fetchall()
+    
+    if overlapping_bookings:
+        db.close()
+        return jsonify({"error": "Room already booked for these dates"}), 400
+    
     db.execute(
         "INSERT INTO bookings (user_id, room_id, check_in, check_out, booking_status, arrival_status) VALUES (?, ?, ?, ?, ?, ?)",
         (data["user_id"], data["room_id"], data["check_in"], data["check_out"], data.get("booking_status", "Pending"), data.get("arrival_status", "Not Arrived"))

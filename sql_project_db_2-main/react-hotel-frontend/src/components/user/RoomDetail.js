@@ -10,6 +10,7 @@ function RoomDetail() {
   const navigate = useNavigate();
   const [room, setRoom] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bookingData, setBookingData] = useState({
     checkIn: "",
@@ -22,10 +23,15 @@ function RoomDetail() {
 
   const fetchRoomDetails = async () => {
     try {
-      const roomResponse = await API.getRoom(roomId);
+      const [roomResponse, bookingsResponse, reviewsResponse] = await Promise.all([
+        API.getRoom(roomId),
+        API.getBookings(),
+        API.getReviews()
+      ]);
+      
       setRoom(roomResponse.data);
-
-      const reviewsResponse = await API.getReviews();
+      setBookings(bookingsResponse.data);
+      
       const roomReviews = reviewsResponse.data.filter(
         (r) => r.room_id === parseInt(roomId)
       );
@@ -35,6 +41,23 @@ function RoomDetail() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getUpcomingBookings = () => {
+    const today = new Date().toISOString().split('T')[0];
+    return bookings.filter(booking => 
+      booking.room_id === parseInt(roomId) && 
+      booking.booking_status !== 'Cancelled' &&
+      booking.check_out >= today
+    ).sort((a, b) => new Date(a.check_in) - new Date(b.check_in));
+  };
+
+  const formatBookingDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric' 
+    });
   };
 
   const handleBooking = () => {
@@ -120,6 +143,33 @@ function RoomDetail() {
                   <strong>Price:</strong> {formatCurrency(room.price)}/night
                 </li>
               </ul>
+              
+              {/* Upcoming Bookings */}
+              {getUpcomingBookings().length > 0 && (
+                <div className="mt-4">
+                  <h5>Upcoming Bookings</h5>
+                  <div className="list-group">
+                    {getUpcomingBookings().slice(0, 3).map((booking, index) => (
+                      <div key={booking.booking_id} className="list-group-item">
+                        <div className="d-flex justify-content-between align-items-center">
+                          <span>
+                            <i className="fa fa-calendar text-warning"></i>{" "}
+                            Booked {formatBookingDate(booking.check_in)} - {formatBookingDate(booking.check_out)}
+                          </span>
+                          <span className={`badge ${booking.booking_status === 'Confirmed' ? 'bg-success' : 'bg-warning'}`}>
+                            {booking.booking_status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {getUpcomingBookings().length > 3 && (
+                      <div className="list-group-item text-muted text-center">
+                        +{getUpcomingBookings().length - 3} more bookings
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -133,6 +183,14 @@ function RoomDetail() {
                 <p className="text-muted mb-4">{room.description}</p>
 
                 <h5 className="mb-3">Book This Room</h5>
+
+                {/* Booking Warning */}
+                {getUpcomingBookings().length > 0 && (
+                  <div className="alert alert-warning mb-3">
+                    <i className="fa fa-exclamation-triangle"></i>{" "}
+                    This room has upcoming bookings. Please check availability before booking.
+                  </div>
+                )}
 
                 <div className="mb-3">
                   <label className="form-label">Check-in Date</label>

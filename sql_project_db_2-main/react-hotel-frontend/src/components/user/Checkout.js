@@ -67,7 +67,11 @@ function Checkout() {
       
       navigate("/my-bookings");
     } catch (err) {
-      setError("Checkout failed. Please try again.");
+      if (err.response?.status === 400 && err.response?.data?.error === "Room already booked for these dates") {
+        setError("Room already booked for these dates. Please select different dates.");
+      } else {
+        setError("Checkout failed. Please try again.");
+      }
       console.error(err);
     } finally {
       setLoading(false);
