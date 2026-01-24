@@ -106,8 +106,11 @@ CREATE TABLE IF NOT EXISTS payments (
     payment_id INTEGER PRIMARY KEY AUTOINCREMENT,
     booking_id INTEGER UNIQUE,
     amount REAL NOT NULL,
-    payment_method TEXT DEFAULT 'Paytm',
+    payment_method TEXT DEFAULT 'Cash',
     payment_status TEXT DEFAULT 'Pending',
+    transaction_id TEXT,
+    card_type TEXT,
+    failure_reason TEXT,
     payment_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (booking_id) REFERENCES bookings(booking_id)
 )

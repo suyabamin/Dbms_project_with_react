@@ -44,6 +44,39 @@ def init_database():
         print(f"❌ Database initialization failed: {e}")
         return False
 
+def migrate_database():
+    """Add missing columns to existing database tables"""
+    try:
+        conn = sqlite3.connect(DB_FILE, timeout=20)
+        cursor = conn.cursor()
+        
+        # Check and add missing columns to payments table
+        cursor.execute("PRAGMA table_info(payments)")
+        columns = [col[1] for col in cursor.fetchall()]
+        
+        if 'transaction_id' not in columns:
+            cursor.execute("ALTER TABLE payments ADD COLUMN transaction_id TEXT")
+            print("✅ Added transaction_id column to payments table")
+        
+        if 'card_type' not in columns:
+            cursor.execute("ALTER TABLE payments ADD COLUMN card_type TEXT")
+            print("✅ Added card_type column to payments table")
+        
+        if 'failure_reason' not in columns:
+            cursor.execute("ALTER TABLE payments ADD COLUMN failure_reason TEXT")
+            print("✅ Added failure_reason column to payments table")
+        
+        conn.commit()
+        conn.close()
+        print("✅ Database migration completed!")
+        return True
+    except Exception as e:
+        print(f"❌ Database migration failed: {e}")
+        return False
+
+# Run migration on startup
+migrate_database()
+
 def get_db():
     """Get database connection with error handling"""
     try:
