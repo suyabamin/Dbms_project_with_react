@@ -219,24 +219,58 @@ def bookings():
     check_in = data["check_in"]
     check_out = data["check_out"]
     
+    # Debug logging
+    print(f"Checking overlap for room {room_id} from {check_in} to {check_out}")
+    
+    # First, get all bookings for this room to understand what we're dealing with
+    all_bookings = db.execute("""
+        SELECT booking_id, booking_status, check_in, check_out 
+        FROM bookings 
+        WHERE room_id = ?
+        ORDER BY booking_id
+    """, (room_id,)).fetchall()
+    
+    print(f"All bookings for room {room_id}: {all_bookings}")
+    
+    # Get active (non-cancelled) bookings that could cause overlap
     overlapping_bookings = db.execute("""
-        SELECT * FROM bookings 
+        SELECT booking_id, booking_status, check_in, check_out FROM bookings 
         WHERE room_id = ? 
         AND booking_status != 'Cancelled'
-        AND check_in < ? AND check_out > ?
-    """, (room_id, check_out, check_in)).fetchall()
+        AND (
+            (check_in <= ? AND check_out > ?) OR
+            (check_in < ? AND check_out >= ?) OR
+            (check_in >= ? AND check_out <= ?)
+        )
+    """, (room_id, check_out, check_in, check_out, check_in, check_in, check_out)).fetchall()
     
     if overlapping_bookings:
+        print(f"Found overlapping active bookings: {overlapping_bookings}")
+        # Return more detailed error message
+        overlapping_details = []
+        for booking in overlapping_bookings:
+            overlapping_details.append(f"Booking #{booking[0]} ({booking[2]} to {booking[3]})")
+        
         db.close()
-        return jsonify({"error": "Room already booked for these dates"}), 400
+        return jsonify({
+            "error": "Room already booked for these dates",
+            "details": f"Conflicts with: {', '.join(overlapping_details)}"
+        }), 400
+    else:
+        print("No overlapping active bookings found")
     
     db.execute(
         "INSERT INTO bookings (user_id, room_id, check_in, check_out, booking_status, arrival_status) VALUES (?, ?, ?, ?, ?, ?)",
         (data["user_id"], data["room_id"], data["check_in"], data["check_out"], data.get("booking_status", "Pending"), data.get("arrival_status", "Not Arrived"))
     )
     db.commit()
+    
+    # Get the created booking to return its ID
+    created_booking = db.execute("SELECT * FROM bookings WHERE rowid = last_insert_rowid()").fetchone()
     db.close()
-    return jsonify({"message": "Booking created"}), 201
+    
+    print(f"Booking created successfully with ID: {created_booking['booking_id']}")
+    return jsonify(dict(created_booking)), 201
 
 @app.route("/bookings/<int:booking_id>", methods=["GET", "PUT", "DELETE"])
 def booking_detail(booking_id):
@@ -257,6 +291,8 @@ def booking_detail(booking_id):
             db.close()
             return jsonify({"error": "Booking not found"}), 404
         
+        print(f"Updating booking {booking_id} with data: {data}")
+        
         # Prepare update values, keeping existing values if not provided
         user_id = data.get("user_id", current_booking["user_id"])
         room_id = data.get("room_id", current_booking["room_id"])
@@ -265,11 +301,36 @@ def booking_detail(booking_id):
         booking_status = data.get("booking_status", current_booking["booking_status"])
         arrival_status = data.get("arrival_status", current_booking["arrival_status"])
         
+        # If we're changing dates or room, check for overlaps (except when cancelling)
+        if (room_id != current_booking["room_id"] or 
+            check_in != current_booking["check_in"] or 
+            check_out != current_booking["check_out"]) and booking_status != 'Cancelled':
+            
+            print(f"Checking for overlaps due to date/room change")
+            overlapping_bookings = db.execute("""
+                SELECT booking_id, booking_status, check_in, check_out FROM bookings 
+                WHERE room_id = ? 
+                AND booking_id != ?
+                AND booking_status != 'Cancelled'
+                AND (
+                    (check_in <= ? AND check_out > ?) OR
+                    (check_in < ? AND check_out >= ?) OR
+                    (check_in >= ? AND check_out <= ?)
+                )
+            """, (room_id, booking_id, check_out, check_in, check_out, check_in, check_in, check_out)).fetchall()
+            
+            if overlapping_bookings:
+                print(f"Overlap detected: {overlapping_bookings}")
+                db.close()
+                return jsonify({"error": "Room already booked for these dates"}), 400
+        
         db.execute("""
             UPDATE bookings SET user_id=?, room_id=?, check_in=?, check_out=?, booking_status=?, arrival_status=? WHERE booking_id=?
         """, (user_id, room_id, check_in, check_out, booking_status, arrival_status, booking_id))
         db.commit()
         db.close()
+        
+        print(f"Booking {booking_id} updated successfully")
         return jsonify({"message": "Booking updated"})
 
     elif request.method == "DELETE":

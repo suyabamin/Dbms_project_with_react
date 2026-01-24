@@ -45,7 +45,16 @@ function Checkout() {
         arrival_status: "Not Arrived",
       });
 
-      const bookingId = bookingResponse.data.booking_id || user.user_id;
+      console.log('Booking response:', bookingResponse);
+      
+      // Extract booking ID from the response
+      const bookingId = bookingResponse.data?.booking_id;
+      
+      if (!bookingId) {
+        throw new Error('Failed to get booking ID from response');
+      }
+      
+      console.log('Using booking ID:', bookingId);
 
       // Create payment
       await API.createPayment({
@@ -67,12 +76,18 @@ function Checkout() {
       
       navigate("/my-bookings");
     } catch (err) {
+      console.error('Checkout error:', err);
+      
       if (err.response?.status === 400 && err.response?.data?.error === "Room already booked for these dates") {
-        setError("Room already booked for these dates. Please select different dates.");
+        const details = err.response.data.details || "";
+        setError(`Room already booked for these dates. Please select different dates. ${details}`);
+      } else if (err.response?.status === 500) {
+        setError(`Server error: ${err.response.data?.message || 'Internal server error'}. Please try again.`);
+      } else if (err.message === 'Failed to get booking ID from response') {
+        setError('Failed to process booking. Please try again.');
       } else {
         setError("Checkout failed. Please try again.");
       }
-      console.error(err);
     } finally {
       setLoading(false);
     }
