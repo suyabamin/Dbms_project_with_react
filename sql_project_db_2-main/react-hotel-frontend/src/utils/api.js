@@ -110,6 +110,12 @@ export const API = {
   sendContactMessage: (data) => apiClient.post("/contact-messages", data),
   updateContactMessage: (id, data) => apiClient.put(`/contact-messages/${id}`, data),
   deleteContactMessage: (id) => apiClient.delete(`/contact-messages/${id}`),
+
+  // SSLCommerz Payment Gateway
+  initiateSSLPayment: (data) => apiClient.post("/initiate-ssl-payment", data),
+  getSSLPaymentStatus: (transactionId) => apiClient.get(`/get-ssl-payment-status/${transactionId}`),
+  simulatePaymentSuccess: (data) => apiClient.post("/simulate-payment-success", data),
+  cancelUnpaidBooking: (data) => apiClient.post("/cancel-unpaid-booking", data),
 };
 
 export default API;

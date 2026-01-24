@@ -13,7 +13,7 @@ function Checkout() {
   const user = auth.getUser();
 
   const [paymentData, setPaymentData] = useState({
-    paymentMethod: "Paytm",
+    paymentMethod: "SSLCommerz",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -56,7 +56,32 @@ function Checkout() {
       
       console.log('Using booking ID:', bookingId);
 
-      // Create payment
+      // Handle SSLCommerz payment (bKash/Nagad)
+      if (paymentData.paymentMethod === "SSLCommerz") {
+        try {
+          const sslResponse = await API.initiateSSLPayment({
+            booking_id: bookingId,
+            amount: totalAmount,
+            currency: "BDT"
+          });
+          
+          if (sslResponse.data?.payment_url) {
+            // Redirect to SSLCommerz payment gateway
+            window.location.href = sslResponse.data.payment_url;
+            return;
+          } else {
+            throw new Error('Payment URL not received');
+          }
+        } catch (sslError) {
+          console.error('SSLCommerz error:', sslError);
+          // Fall back to regular payment if SSLCommerz fails
+          setError("Online payment service temporarily unavailable. Please try Cash or other payment methods.");
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Create payment for non-SSLCommerz methods
       await API.createPayment({
         booking_id: bookingId,
         amount: totalAmount,
@@ -205,6 +230,30 @@ function Checkout() {
                       <input
                         className="form-check-input"
                         type="radio"
+                        id="sslcommerz"
+                        name="paymentMethod"
+                        value="SSLCommerz"
+                        checked={paymentData.paymentMethod === "SSLCommerz"}
+                        onChange={(e) =>
+                          setPaymentData({
+                            ...paymentData,
+                            paymentMethod: e.target.value,
+                          })
+                        }
+                      />
+                      <label className="form-check-label" htmlFor="sslcommerz">
+                        <i className="fa fa-mobile-alt"></i> <strong>bKash / Nagad / Card</strong> (Recommended)
+                        <br/>
+                        <small className="text-muted">Pay securely via bKash, Nagad, or Card - Money goes to 01516512119</small>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="radio"
                         id="cash"
                         name="paymentMethod"
                         value="Cash"
@@ -227,31 +276,10 @@ function Checkout() {
                       <input
                         className="form-check-input"
                         type="radio"
-                        id="paytm"
-                        name="paymentMethod"
-                        value="Paytm"
-                        checked={paymentData.paymentMethod === "Paytm"}
-                        onChange={(e) =>
-                          setPaymentData({
-                            ...paymentData,
-                            paymentMethod: e.target.value,
-                          })
-                        }
-                      />
-                      <label className="form-check-label" htmlFor="paytm">
-                        <i className="fa fa-wallet"></i> Paytm Wallet
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="radio"
                         id="card"
                         name="paymentMethod"
                         value="Credit Card"
+                        checked={paymentData.paymentMethod === "Credit Card"}
                         onChange={(e) =>
                           setPaymentData({
                             ...paymentData,
@@ -260,15 +288,15 @@ function Checkout() {
                         }
                       />
                       <label className="form-check-label" htmlFor="card">
-                        <i className="fa fa-credit-card"></i> Credit/Debit Card
+                        <i className="fa fa-credit-card"></i> Credit/Debit Card (Manual)
                       </label>
                     </div>
                   </div>
 
-                  <div className="alert alert-info">
+                  <div className="alert alert-success">
                     <small>
-                      <i className="fa fa-lock"></i> This is a demo booking. No
-                      real payment will be charged.
+                      <i className="fa fa-lock"></i> Secure payment powered by SSLCommerz. 
+                      All online payments are processed securely.
                     </small>
                   </div>
 
@@ -277,7 +305,7 @@ function Checkout() {
                     className="btn btn-primary w-100 btn-lg"
                     disabled={loading}
                   >
-                    {loading ? "Processing..." : "Complete Booking"}
+                    {loading ? "Processing..." : paymentData.paymentMethod === "SSLCommerz" ? "Pay Now with bKash/Nagad" : "Complete Booking"}
                   </button>
                 </form>
               </div>

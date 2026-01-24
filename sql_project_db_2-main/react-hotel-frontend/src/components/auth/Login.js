@@ -50,42 +50,56 @@ function Login() {
 
       if (loginType === "admin") {
         console.log("👨‍💼 Attempting admin login...");
-        // For admin login, we need to check admin credentials
-        const response = await API.getUsers();
-        console.log("👥 Users fetched:", response.data.length);
-        const users = response.data;
-        const user = users.find(
-          (u) => u.email === formData.email && u.password === formData.password && u.role === "admin"
-        );
-
-        if (user) {
-          console.log("✅ Admin found:", user.name);
-          auth.setUser(user);
-          auth.setToken(`token_${user.user_id}`);
-          window.dispatchEvent(new Event("authChange"));
-          navigate("/admin/dashboard");
-        } else {
-          console.log("❌ Invalid admin credentials");
-          setError("Invalid admin credentials");
+        // For admin login, use login endpoint
+        try {
+          const response = await API.login(formData.email, formData.password);
+          const user = response.data.user;
+          
+          if (user && user.role === "admin") {
+            console.log("✅ Admin found:", user.name);
+            auth.setUser(user);
+            auth.setToken(`token_${user.user_id}`);
+            window.dispatchEvent(new Event("authChange"));
+            navigate("/admin/dashboard");
+          } else {
+            console.log("❌ User is not an admin");
+            setError("Invalid admin credentials");
+          }
+        } catch (loginErr) {
+          console.error("❌ Admin login failed:", loginErr);
+          if (loginErr.response?.status === 401) {
+            setError("Invalid email or password");
+          } else if (loginErr.response?.status === 403) {
+            setError(loginErr.response.data.error || "Account banned");
+          } else {
+            setError("Login failed. Please try again.");
+          }
         }
       } else {
         console.log("👤 Attempting user login...");
-        const response = await API.getUsers();
-        console.log("👥 Users fetched:", response.data.length);
-        const users = response.data;
-        const user = users.find(
-          (u) => u.email === formData.email && u.password === formData.password
-        );
-
-        if (user) {
-          console.log("✅ User found:", user.name);
-          auth.setUser(user);
-          auth.setToken(`token_${user.user_id}`);
-          window.dispatchEvent(new Event("authChange"));
-          navigate("/");
-        } else {
-          console.log("❌ Invalid email or password");
-          setError("Invalid email or password");
+        try {
+          const response = await API.login(formData.email, formData.password);
+          const user = response.data.user;
+          
+          if (user) {
+            console.log("✅ User found:", user.name);
+            auth.setUser(user);
+            auth.setToken(`token_${user.user_id}`);
+            window.dispatchEvent(new Event("authChange"));
+            navigate("/");
+          } else {
+            console.log("❌ Invalid email or password");
+            setError("Invalid email or password");
+          }
+        } catch (loginErr) {
+          console.error("❌ User login failed:", loginErr);
+          if (loginErr.response?.status === 401) {
+            setError("Invalid email or password");
+          } else if (loginErr.response?.status === 403) {
+            setError(loginErr.response.data.error || "Account banned");
+          } else {
+            setError("Login failed. Please try again.");
+          }
         }
       }
     } catch (err) {

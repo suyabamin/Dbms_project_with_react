@@ -20,6 +20,9 @@ import MyReviews from "../components/user/MyReviews";
 import Facilities from "../components/user/Facilities";
 import About from "../components/user/About";
 import Contact from "../components/user/Contact";
+import PaymentSimulation from "../components/user/PaymentSimulation";
+import PaymentSuccess from "../components/user/PaymentSuccess";
+import PaymentFail from "../components/user/PaymentFail";
 
 // Admin Pages
 import AdminDashboard from "../components/admin/Dashboard";
@@ -77,6 +80,12 @@ function AppRoutes() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          
+          {/* Payment Routes */}
+          <Route path="/payment-simulation" element={<PaymentSimulation />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-fail" element={<PaymentFail />} />
+          <Route path="/payment-cancel" element={<PaymentFail />} />
 
           {/* User Protected Routes */}
           <Route

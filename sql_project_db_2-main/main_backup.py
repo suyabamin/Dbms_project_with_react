@@ -20,18 +20,6 @@ CORS(app, resources={
 
 DB_FILE = "hotel_booking.db"
 
-# ---------------- SSLCommerz Configuration ----------------
-# SSLCommerz configuration - in production, these should be stored securely
-SSLCOMMERZ_STORE_ID = "your_sslcommerz_store_id"  # Replace with actual store ID
-SSLCOMMERZ_STORE_PASSWORD = "your_sslcommerz_store_password"  # Replace with actual store password
-SSLCOMMERZ_BASE_URL = "https://sandbox.sslcommerz.com"
-
-# Payment recipient information - funds will be transferred to this account
-PAYMENT_RECIPIENT_PHONE = "01516512119"  # Bkash/Nagad number where money will be received
-
-# Enable simulation mode for testing (set to False in production with real credentials)
-SSLCOMMERZ_SIMULATION_MODE = True
-
 # ---------------- Database Helper ----------------
 def init_database():
     """Initialize database with proper error handling"""
@@ -98,43 +86,6 @@ def home():
     return "<h2>Hotel Booking Management System API is running! Go to /swagger to see API docs.</h2>"
 
 # ================== USERS ==================
-@app.route("/login", methods=["POST"])
-def login():
-    """User login endpoint"""
-    try:
-        data = request.get_json()
-        email = data.get("email")
-        password = data.get("password")
-        
-        if not email or not password:
-            return jsonify({"error": "Email and password are required"}), 400
-        
-        db = get_db()
-        user = db.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
-        db.close()
-        
-        if not user:
-            return jsonify({"error": "Invalid email or password"}), 401
-        
-        if user["password"] != password:
-            return jsonify({"error": "Invalid email or password"}), 401
-        
-        if user["status"] == "banned":
-            return jsonify({"error": "Your account has been banned. Please contact support."}), 403
-        
-        # Return user data (excluding password)
-        user_data = dict(user)
-        del user_data["password"]
-        
-        return jsonify({
-            "message": "Login successful",
-            "user": user_data
-        }), 200
-        
-    except Exception as e:
-        print(f"Login error: {e}")
-        return jsonify({"error": "Login failed"}), 500
-
 @app.route("/users", methods=["GET", "POST"])
 def users():
     db = get_db()
@@ -574,6 +525,11 @@ def system_settings():
     return jsonify({"message": "Settings updated"}), 200
 
 # ================== SSLCOMMERZ PAYMENT GATEWAY ==================
+# SSLCommerz configuration - in production, these should be stored securely
+SSLCOMMERZ_STORE_ID = "your_sslcommerz_store_id"  # Replace with actual store ID
+SSLCOMMERZ_STORE_PASSWORD = "your_sslcommerz_store_password"  # Replace with actual store password
+SSLCOMMERZ_BASE_URL = "https://sandbox.sslcommerz.com"
+
 @app.route("/initiate-ssl-payment", methods=["POST"])
 def initiate_ssl_payment():
     """Initiate SSLCommerz payment for a booking"""
@@ -601,31 +557,19 @@ def initiate_ssl_payment():
         if not user:
             return jsonify({"error": "User not found"}), 404
         
-        transaction_id = f"BK_{booking_id}_{int(time.time())}"
-        
-        # SIMULATION MODE - for testing without real SSLCommerz credentials
-        if SSLCOMMERZ_SIMULATION_MODE:
-            # Return a simulated payment page URL
-            return jsonify({
-                "status": "success",
-                "payment_url": f"http://localhost:3000/payment-simulation?booking_id={booking_id}&amount={amount}&tran_id={transaction_id}",
-                "transaction_id": transaction_id,
-                "simulation_mode": True
-            })
-        
-        # PRODUCTION MODE - use real SSLCommerz
+        # Prepare SSLCommerz payload
         ssl_payload = {
             "store_id": SSLCOMMERZ_STORE_ID,
             "store_passwd": SSLCOMMERZ_STORE_PASSWORD,
             "total_amount": float(amount),
             "currency": currency,
-            "tran_id": transaction_id,
+            "tran_id": f"BK_{booking_id}_{int(time.time())}",
             "success_url": f"http://localhost:3000/payment-success?booking_id={booking_id}",
-            "fail_url": f"http://localhost:3000/payment-fail?booking_id={booking_id}",
-            "cancel_url": f"http://localhost:3000/payment-cancel?booking_id={booking_id}",
+            "fail_url": f"http://localhost:3000/payment-fail",
+            "cancel_url": f"http://localhost:3000/checkout",
             "cus_name": user["name"],
             "cus_email": user["email"],
-            "cus_phone": user.get("phone", "N/A") if hasattr(user, 'get') else (user["phone"] or "N/A"),
+            "cus_phone": user.get("phone", "N/A"),
             "cus_addr1": "N/A",
             "cus_city": "N/A",
             "cus_country": "Bangladesh",
@@ -633,12 +577,7 @@ def initiate_ssl_payment():
             "product_name": f"Room Booking #{booking_id}",
             "product_category": "Hotel",
             "num_of_item": 1,
-            "product_profile": "general",
-            "multi_card_no": PAYMENT_RECIPIENT_PHONE,
-            "value_a": f"BookingID:{booking_id}",
-            "value_b": "Hotel Booking Payment",
-            "value_c": "Room Reservation",
-            "value_d": "Secure Payment"
+            "product_profile": "general"
         }
         
         # Make request to SSLCommerz
@@ -658,90 +597,6 @@ def initiate_ssl_payment():
     except Exception as e:
         print(f"SSLCommerz initiation error: {str(e)}")
         return jsonify({"error": "Payment initiation failed"}), 500
-
-
-@app.route("/simulate-payment-success", methods=["POST"])
-def simulate_payment_success():
-    """Simulate successful payment for testing"""
-    try:
-        data = request.get_json()
-        booking_id = data.get("booking_id")
-        amount = data.get("amount")
-        payment_method = data.get("payment_method", "bKash")
-        transaction_id = data.get("transaction_id", f"SIM_{int(time.time())}")
-        
-        if not booking_id:
-            return jsonify({"error": "booking_id is required"}), 400
-        
-        db = get_db()
-        
-        # Get existing booking
-        booking = db.execute("SELECT * FROM bookings WHERE booking_id=?", (booking_id,)).fetchone()
-        if not booking:
-            db.close()
-            return jsonify({"error": "Booking not found"}), 404
-        
-        # Update booking status to confirmed
-        db.execute("UPDATE bookings SET booking_status='Confirmed' WHERE booking_id=?", (booking_id,))
-        
-        # Check if payment record already exists
-        existing_payment = db.execute("SELECT * FROM payments WHERE booking_id=?", (booking_id,)).fetchone()
-        if existing_payment:
-            # Update existing payment
-            db.execute("""UPDATE payments SET amount=?, payment_method=?, payment_status='Completed', 
-                        transaction_id=? WHERE booking_id=?""",
-                      (float(amount), payment_method, transaction_id, booking_id))
-        else:
-            # Create new payment record
-            db.execute("INSERT INTO payments (booking_id, amount, payment_method, payment_status, transaction_id) VALUES (?, ?, ?, ?, ?)",
-                      (booking_id, float(amount), payment_method, "Completed", transaction_id))
-        
-        db.commit()
-        db.close()
-        
-        return jsonify({
-            "status": "success", 
-            "message": f"Payment successful via {payment_method}! Booking confirmed.",
-            "booking_id": booking_id,
-            "recipient_phone": PAYMENT_RECIPIENT_PHONE
-        })
-    
-    except Exception as e:
-        print(f"Simulate payment error: {str(e)}")
-        return jsonify({"error": "Payment simulation failed"}), 500
-
-
-@app.route("/cancel-unpaid-booking", methods=["POST"])
-def cancel_unpaid_booking():
-    """Cancel a booking that wasn't paid"""
-    try:
-        data = request.get_json()
-        booking_id = data.get("booking_id")
-        
-        if not booking_id:
-            return jsonify({"error": "booking_id is required"}), 400
-        
-        db = get_db()
-        
-        # Get existing booking
-        booking = db.execute("SELECT * FROM bookings WHERE booking_id=?", (booking_id,)).fetchone()
-        if not booking:
-            db.close()
-            return jsonify({"error": "Booking not found"}), 404
-        
-        # Only cancel if still pending
-        if booking["booking_status"] == "Pending":
-            db.execute("UPDATE bookings SET booking_status='Cancelled' WHERE booking_id=?", (booking_id,))
-            db.commit()
-        
-        db.close()
-        
-        return jsonify({"status": "cancelled", "message": "Booking cancelled"})
-    
-    except Exception as e:
-        print(f"Cancel booking error: {str(e)}")
-        return jsonify({"error": "Failed to cancel booking"}), 500
-
 
 @app.route("/ssl-payment-success", methods=["POST"])
 def ssl_payment_success():
@@ -765,24 +620,24 @@ def ssl_payment_success():
         db = get_db()
         
         # Get existing booking
-        booking = db.execute("SELECT * FROM bookings WHERE booking_id= ? ", (booking_id,)).fetchone()
+        booking = db.execute("SELECT * FROM bookings WHERE booking_id=?", (booking_id,)).fetchone()
         if not booking:
             db.close()
             return jsonify({"error": "Booking not found"}), 404
         
         # Update booking status to confirmed
-        db.execute("UPDATE bookings SET booking_status='Confirmed' WHERE booking_id= ? ", (booking_id,))
+        db.execute("UPDATE bookings SET booking_status='Confirmed' WHERE booking_id=?", (booking_id,))
         
         # Check if payment record already exists
-        existing_payment = db.execute("SELECT * FROM payments WHERE booking_id= ? ", (booking_id,)).fetchone()
+        existing_payment = db.execute("SELECT * FROM payments WHERE booking_id=?", (booking_id,)).fetchone()
         if existing_payment:
             # Update existing payment
-            db.execute("""UPDATE payments SET amount= ? , payment_method='SSLCommerz', payment_status='Completed', 
-                        transaction_id= ? , card_type= ?  WHERE booking_id= ? """,
+            db.execute("""UPDATE payments SET amount=?, payment_method='SSLCommerz', payment_status='Completed', 
+                        transaction_id=?, card_type=? WHERE booking_id=?""",
                       (float(amount), val_id, card_type, booking_id))
         else:
             # Create new payment record
-            db.execute("INSERT INTO payments (booking_id, amount, payment_method, payment_status, transaction_id, card_type) VALUES ( ? , ? , ? , ? , ? , ? )",
+            db.execute("INSERT INTO payments (booking_id, amount, payment_method, payment_status, transaction_id, card_type) VALUES (?, ?, ?, ?, ?, ?)",
                       (booking_id, float(amount), "SSLCommerz", "Completed", val_id, card_type))
         
         db.commit()
@@ -793,7 +648,6 @@ def ssl_payment_success():
     except Exception as e:
         print(f"SSLCommerz success callback error: {str(e)}")
         return jsonify({"error": "Error processing payment success"}), 500
-
 
 @app.route("/ssl-payment-fail", methods=["POST"])
 def ssl_payment_fail():
@@ -811,14 +665,15 @@ def ssl_payment_fail():
         if booking_id:
             # Update booking status to cancelled due to failed payment
             db = get_db()
-            db.execute("UPDATE bookings SET booking_status='Cancelled' WHERE booking_id= ? ", (booking_id,))
+            db.execute("UPDATE bookings SET booking_status='Cancelled' WHERE booking_id=?", (booking_id,))
             
             # Update or create payment record
-            existing_payment = db.execute("SELECT * FROM payments WHERE booking_id= ? ", (booking_id,)).fetchone()
+            existing_payment = db.execute("SELECT * FROM payments WHERE booking_id=?", (booking_id,)).fetchone()
             if existing_payment:
-                db.execute("UPDATE payments SET payment_status='Failed', failure_reason= ?  WHERE booking_id= ? ", (reason, booking_id))
+                db.execute("UPDATE payments SET payment_status='Failed', failure_reason=? WHERE booking_id=?", (reason, booking_id))
             else:
-                db.execute("INSERT INTO payments (booking_id, amount, payment_method, payment_status, failure_reason) VALUES (?, 0, 'SSLCommerz', 'Failed', ?)", (booking_id, reason))
+                db.execute("INSERT INTO payments (booking_id, amount, payment_method, payment_status, failure_reason) 
+                          VALUES (?, 0, 'SSLCommerz', 'Failed', ?)", (booking_id, reason))
             
             db.commit()
             db.close()
@@ -828,7 +683,6 @@ def ssl_payment_fail():
     except Exception as e:
         print(f"SSLCommerz fail callback error: {str(e)}")
         return jsonify({"error": "Error processing payment failure"}), 500
-
 
 @app.route("/ssl-payment-cancel", methods=["POST"])
 def ssl_payment_cancel():
@@ -845,14 +699,15 @@ def ssl_payment_cancel():
         if booking_id:
             # Update booking status to cancelled
             db = get_db()
-            db.execute("UPDATE bookings SET booking_status='Cancelled' WHERE booking_id= ? ", (booking_id,))
+            db.execute("UPDATE bookings SET booking_status='Cancelled' WHERE booking_id=?", (booking_id,))
             
             # Update or create payment record
-            existing_payment = db.execute("SELECT * FROM payments WHERE booking_id= ? ", (booking_id,)).fetchone()
+            existing_payment = db.execute("SELECT * FROM payments WHERE booking_id=?", (booking_id,)).fetchone()
             if existing_payment:
-                db.execute("UPDATE payments SET payment_status='Cancelled' WHERE booking_id= ? ", (booking_id,))
+                db.execute("UPDATE payments SET payment_status='Cancelled' WHERE booking_id=?", (booking_id,))
             else:
-                db.execute("INSERT INTO payments (booking_id, amount, payment_method, payment_status) VALUES (?, 0, 'SSLCommerz', 'Cancelled')", (booking_id,))
+                db.execute("INSERT INTO payments (booking_id, amount, payment_method, payment_status) 
+                          VALUES (?, 0, 'SSLCommerz', 'Cancelled')", (booking_id,))
             
             db.commit()
             db.close()
@@ -862,7 +717,6 @@ def ssl_payment_cancel():
     except Exception as e:
         print(f"SSLCommerz cancel callback error: {str(e)}")
         return jsonify({"error": "Error processing payment cancellation"}), 500
-
 
 @app.route("/get-ssl-payment-status/<transaction_id>")
 def get_ssl_payment_status(transaction_id):
@@ -884,8 +738,7 @@ def get_ssl_payment_status(transaction_id):
         print(f"SSLCommerz status check error: {str(e)}")
         return jsonify({"error": "Error checking payment status"}), 500
 
-
-
+# ================== CONTACT MESSAGES ==================
 @app.route("/contact-messages", methods=["GET", "POST"])
 def contact_messages():
     db = get_db()
